@@ -11,17 +11,13 @@ import java.util.UUID;
 @Table(name = "app_user")
 class UserV1 {
 
-  @Id
-  private UUID id;
+  @Id private UUID id;
 
   @Column(nullable = false, unique = true)
   private String email;
 
   @Column(name = "password_hash", nullable = false)
   private String passwordHash;
-
-  @Column(name = "junction_user_id")
-  private String junctionUserId;
 
   @Column(name = "created_at", nullable = false)
   private LocalDateTime createdAt;
@@ -31,12 +27,10 @@ class UserV1 {
 
   protected UserV1() {}
 
-  UserV1(
-      UUID id, String email, String passwordHash, String junctionUserId, LocalDateTime createdAt) {
+  UserV1(UUID id, String email, String passwordHash, LocalDateTime createdAt) {
     this.id = id;
     this.email = email;
     this.passwordHash = passwordHash;
-    this.junctionUserId = junctionUserId;
     this.createdAt = createdAt;
     this.updatedAt = createdAt;
   }
@@ -51,10 +45,6 @@ class UserV1 {
 
   String getPasswordHash() {
     return passwordHash;
-  }
-
-  String getJunctionUserId() {
-    return junctionUserId;
   }
 
   LocalDateTime getCreatedAt() {

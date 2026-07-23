@@ -1,5 +1,6 @@
 package com.youth.wearables.usermanagement.application;
 
+import com.youth.wearables.usermanagement.application.provisioning.WearableAccountProvisioner;
 import com.youth.wearables.usermanagement.application.repositories.UserRepository;
 import com.youth.wearables.usermanagement.application.security.PasswordHasher;
 import com.youth.wearables.usermanagement.application.security.TokenProvider;
@@ -17,12 +18,17 @@ public class AuthenticationUseCase {
   private final UserRepository userRepository;
   private final PasswordHasher passwordHasher;
   private final TokenProvider tokenProvider;
+  private final WearableAccountProvisioner wearableAccountProvisioner;
 
   public AuthenticationUseCase(
-      UserRepository userRepository, PasswordHasher passwordHasher, TokenProvider tokenProvider) {
+      UserRepository userRepository,
+      PasswordHasher passwordHasher,
+      TokenProvider tokenProvider,
+      WearableAccountProvisioner wearableAccountProvisioner) {
     this.userRepository = userRepository;
     this.passwordHasher = passwordHasher;
     this.tokenProvider = tokenProvider;
+    this.wearableAccountProvisioner = wearableAccountProvisioner;
   }
 
   public RegistrationResult register(RegisterUserCommand command) {
@@ -32,7 +38,11 @@ public class AuthenticationUseCase {
 
     String passwordHash = passwordHasher.hash(command.password());
     User user = userRepository.createUser(command.email(), passwordHash);
+
+    wearableAccountProvisioner.ensureProvisioned(user.id());
+
     String token = tokenProvider.issueToken(user.id());
+
     return new RegistrationResult.UserRegistered(user.id().toString(), user.email(), token);
   }
 

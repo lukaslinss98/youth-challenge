@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { YouthLogo } from '@/components/youth-logo';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { FormTextInput } from '@/shared/components/form-text-input';
@@ -42,6 +43,8 @@ export function RegisterScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <YouthLogo style={styles.logo} />
+
         <ThemedText type="title" style={styles.title}>
           Create account
         </ThemedText>
@@ -108,8 +111,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
   },
-  title: {
+  logo: {
     marginTop: Spacing.five,
+    marginBottom: Spacing.two,
+  },
+  title: {
+    marginTop: Spacing.two,
   },
   form: {
     gap: Spacing.three,

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { YouthLogo } from '@/components/youth-logo';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { FormTextInput } from '@/shared/components/form-text-input';
@@ -42,6 +43,8 @@ export function LoginScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
+        <YouthLogo style={styles.logo} />
+
         <ThemedText type="title" style={styles.title}>
           Log in
         </ThemedText>
@@ -105,6 +108,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
     justifyContent: 'center',
+  },
+  logo: {
+    marginBottom: Spacing.two,
   },
   title: {
     textAlign: 'center',
