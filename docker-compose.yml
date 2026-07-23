@@ -20,7 +20,7 @@ services:
     image: dpage/pgadmin4:latest
     container_name: wearables-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@youth.local
+      PGADMIN_DEFAULT_EMAIL: admin@youth.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"
