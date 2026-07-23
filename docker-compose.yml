@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: wearables-postgres
+    environment:
+      POSTGRES_DB: wearables
+      POSTGRES_USER: wearables
+      POSTGRES_PASSWORD: wearables
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wearables -d wearables"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: wearables-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@youth.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  postgres-data:
+  pgadmin-data:
