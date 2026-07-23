@@ -1,0 +1,45 @@
+# Root .gitignore — repo-wide concerns.
+# Note: backend/ (Gradle) and youth-challenge/ (Expo) have their own .gitignore
+# for build artifacts; this file covers OS, IDE, and secrets across the whole repo.
+
+# ── Secrets / local env ──
+# Never commit API keys (e.g. JUNCTION_API_KEY) or local env overrides.
+.env
+.env.*
+*.env
+!.env.example
+!.env.template
+*.local
+secrets.*
+
+# ── IDE / editors ──
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+desktop.ini
+
+# ── Logs / temp ──
+*.log
+*.pid
+tmp/
+.cache/
+
+# ── Build artifacts (belt-and-suspenders; also ignored in subprojects) ──
+build/
+.gradle/
+out/
+bin/
+dist/
+node_modules/
+.expo/
