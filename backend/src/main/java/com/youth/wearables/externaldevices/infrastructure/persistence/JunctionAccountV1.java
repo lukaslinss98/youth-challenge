@@ -1,4 +1,4 @@
-package com.youth.wearables.junction;
+package com.youth.wearables.externaldevices.infrastructure.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

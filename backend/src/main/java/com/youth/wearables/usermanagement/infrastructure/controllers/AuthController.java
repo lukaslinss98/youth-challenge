@@ -40,9 +40,11 @@ class AuthController {
     RegistrationResult result = authenticationUseCase.register(command);
 
     return switch (result) {
-      case UserRegistered(String userId, String email, String token) ->
+      case UserRegistered(String userId, String email, String username, String token) ->
           ResponseEntity.status(HttpStatus.CREATED)
-              .body(new AuthResponseDto(new AuthResponseDto.UserDto(userId, email), token));
+              .body(
+                  new AuthResponseDto(
+                      new AuthResponseDto.UserDto(userId, email, username), token));
       case UserExists ignore -> ResponseEntity.status(HttpStatus.CONFLICT).build();
     };
   }
@@ -53,8 +55,9 @@ class AuthController {
     LoginResult result = authenticationUseCase.login(command);
 
     return switch (result) {
-      case Success(String userId, String email, String token) ->
-          ResponseEntity.ok(new AuthResponseDto(new AuthResponseDto.UserDto(userId, email), token));
+      case Success(String userId, String email, String username, String token) ->
+          ResponseEntity.ok(
+              new AuthResponseDto(new AuthResponseDto.UserDto(userId, email, username), token));
       case InvalidCredentials ignore -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     };
   }

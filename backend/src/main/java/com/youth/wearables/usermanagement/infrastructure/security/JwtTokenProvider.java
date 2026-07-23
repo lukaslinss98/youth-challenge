@@ -1,19 +1,21 @@
 package com.youth.wearables.usermanagement.infrastructure.security;
 
 import com.youth.wearables.usermanagement.application.security.TokenProvider;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 class JwtTokenProvider implements TokenProvider {
 
-  private final Key signingKey;
+  private final SecretKey signingKey;
   private final long expirationMs;
 
   JwtTokenProvider(
@@ -33,5 +35,21 @@ class JwtTokenProvider implements TokenProvider {
         .expiration(expiry)
         .signWith(signingKey)
         .compact();
+  }
+
+  @Override
+  public Optional<UUID> resolveUserId(String token) {
+    try {
+      String subject =
+          Jwts.parser()
+              .verifyWith(signingKey)
+              .build()
+              .parseSignedClaims(token)
+              .getPayload()
+              .getSubject();
+      return Optional.of(UUID.fromString(subject));
+    } catch (JwtException | IllegalArgumentException e) {
+      return Optional.empty();
+    }
   }
 }

@@ -1,6 +1,7 @@
 export type RegisteredUser = {
   id: string;
   email: string;
+  username: string;
 };
 
 export type RegisterResult =

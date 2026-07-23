@@ -1,5 +1,5 @@
-import { Image } from 'expo-image';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, type ImageStyle } from 'expo-image';
+import { StyleSheet, type StyleProp } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 
@@ -8,7 +8,7 @@ const ASPECT_RATIO = 895 / 148;
 type YouthLogoProps = {
   /** Rendered width in px; height is derived from the wordmark aspect ratio. */
   width?: number;
-  style?: StyleProp<ViewStyle>;
+  style?: StyleProp<ImageStyle>;
 };
 
 /**

@@ -21,7 +21,7 @@ type LoginFormValues = {
 export function LoginScreen() {
   const theme = useTheme();
   const loginMutation = useLogin();
-  const setToken = useSessionStore((state) => state.setToken);
+  const setSession = useSessionStore((state) => state.setSession);
   const {
     control,
     handleSubmit,
@@ -32,7 +32,7 @@ export function LoginScreen() {
     loginMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.type === 'success') {
-          setToken(result.token);
+          setSession(result.token, result.user);
         }
       },
     });

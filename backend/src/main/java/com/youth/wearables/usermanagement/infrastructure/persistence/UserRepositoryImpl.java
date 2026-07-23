@@ -26,16 +26,20 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public User createUser(String email, String passwordHash) {
-    User user = User.register(email, passwordHash);
+  public User createUser(String email, String username, String passwordHash) {
+    User user = User.register(email, username, passwordHash);
     UserV1 entity =
-        new UserV1(user.id(), user.email(), user.passwordHash(), user.createdAt());
+        new UserV1(user.id(), user.email(), user.username(), user.passwordHash(), user.createdAt());
     userJpaRepository.save(entity);
     return user;
   }
 
   private User toDomain(UserV1 entity) {
     return new User(
-        entity.getId(), entity.getEmail(), entity.getPasswordHash(), entity.getCreatedAt());
+        entity.getId(),
+        entity.getEmail(),
+        entity.getUsername(),
+        entity.getPasswordHash(),
+        entity.getCreatedAt());
   }
 }

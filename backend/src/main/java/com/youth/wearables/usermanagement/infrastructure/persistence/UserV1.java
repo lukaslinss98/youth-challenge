@@ -16,6 +16,9 @@ class UserV1 {
   @Column(nullable = false, unique = true)
   private String email;
 
+  @Column(nullable = false)
+  private String username;
+
   @Column(name = "password_hash", nullable = false)
   private String passwordHash;
 
@@ -27,9 +30,10 @@ class UserV1 {
 
   protected UserV1() {}
 
-  UserV1(UUID id, String email, String passwordHash, LocalDateTime createdAt) {
+  UserV1(UUID id, String email, String username, String passwordHash, LocalDateTime createdAt) {
     this.id = id;
     this.email = email;
+    this.username = username;
     this.passwordHash = passwordHash;
     this.createdAt = createdAt;
     this.updatedAt = createdAt;
@@ -41,6 +45,10 @@ class UserV1 {
 
   String getEmail() {
     return email;
+  }
+
+  String getUsername() {
+    return username;
   }
 
   String getPasswordHash() {

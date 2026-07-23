@@ -4,7 +4,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import { LogoutButton } from '@/features/auth/components/LogoutButton';
 import { useSessionStore } from '@/features/auth/store/session-store';
 import { queryClient } from '@/shared/api/query-client';
 
@@ -20,14 +19,8 @@ export default function RootLayout() {
         <AnimatedSplashOverlay />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Protected guard={isAuthenticated}>
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                headerShown: true,
-                headerTitle: 'YOU(th)',
-                headerRight: () => <LogoutButton />,
-              }}
-            />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ headerShown: true, headerTitle: 'Profile' }} />
           </Stack.Protected>
 
           <Stack.Protected guard={!isAuthenticated}>

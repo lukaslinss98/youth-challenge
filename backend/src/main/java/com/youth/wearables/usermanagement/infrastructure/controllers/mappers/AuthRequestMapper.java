@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class AuthRequestMapper {
 
   public RegisterUserCommand toCommand(RegisterRequestDto dto) {
-    return new RegisterUserCommand(dto.email(), dto.password());
+    return new RegisterUserCommand(dto.email(), dto.username(), dto.password());
   }
 
   public LoginUserCommand toCommand(LoginRequestDto dto) {

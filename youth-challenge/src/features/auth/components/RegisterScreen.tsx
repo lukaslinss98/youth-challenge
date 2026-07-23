@@ -14,6 +14,7 @@ import { useRegister } from '../api/use-register';
 import { useSessionStore } from '../store/session-store';
 
 type RegisterFormValues = {
+  username: string;
   email: string;
   password: string;
 };
@@ -21,18 +22,18 @@ type RegisterFormValues = {
 export function RegisterScreen() {
   const theme = useTheme();
   const registerMutation = useRegister();
-  const setToken = useSessionStore((state) => state.setToken);
+  const setSession = useSessionStore((state) => state.setSession);
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormValues>({ defaultValues: { email: '', password: '' } });
+  } = useForm<RegisterFormValues>({ defaultValues: { username: '', email: '', password: '' } });
 
   const onSubmit = (values: RegisterFormValues) => {
     registerMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.type === 'success') {
-          setToken(result.token);
+          setSession(result.token, result.user);
         }
       },
     });
@@ -50,6 +51,18 @@ export function RegisterScreen() {
         </ThemedText>
 
         <ThemedView style={styles.form}>
+          <FormTextInput
+            control={control}
+            name="username"
+            placeholder="Username"
+            autoCapitalize="none"
+            rules={{
+              required: 'Username is required',
+              maxLength: { value: 50, message: 'Username must be 50 characters or fewer' },
+            }}
+            errorMessage={errors.username?.message}
+          />
+
           <FormTextInput
             control={control}
             name="email"

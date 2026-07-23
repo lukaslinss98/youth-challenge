@@ -37,13 +37,14 @@ public class AuthenticationUseCase {
     }
 
     String passwordHash = passwordHasher.hash(command.password());
-    User user = userRepository.createUser(command.email(), passwordHash);
+    User user = userRepository.createUser(command.email(), command.username(), passwordHash);
 
     wearableAccountProvisioner.ensureProvisioned(user.id());
 
     String token = tokenProvider.issueToken(user.id());
 
-    return new RegistrationResult.UserRegistered(user.id().toString(), user.email(), token);
+    return new RegistrationResult.UserRegistered(
+        user.id().toString(), user.email(), user.username(), token);
   }
 
   public LoginResult login(LoginUserCommand command) {
@@ -53,6 +54,7 @@ public class AuthenticationUseCase {
     }
 
     String token = tokenProvider.issueToken(user.get().id());
-    return new LoginResult.Success(user.get().id().toString(), user.get().email(), token);
+    return new LoginResult.Success(
+        user.get().id().toString(), user.get().email(), user.get().username(), token);
   }
 }

@@ -5,17 +5,18 @@ import { API_BASE_URL } from '@/shared/constants/api';
 import type { RegisterResult } from '../types';
 
 type RegisterInput = {
+  username: string;
   email: string;
   password: string;
 };
 
-async function registerUser({ email, password }: RegisterInput): Promise<RegisterResult> {
+async function registerUser({ username, email, password }: RegisterInput): Promise<RegisterResult> {
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, email, password }),
     });
   } catch {
     return { type: 'error', message: 'Could not reach the server. Check your connection.' };

@@ -10,5 +10,5 @@ public interface UserRepository {
 
   Optional<User> userByEmail(String email);
 
-  User createUser(String email, String passwordHash);
+  User createUser(String email, String username, String passwordHash);
 }
