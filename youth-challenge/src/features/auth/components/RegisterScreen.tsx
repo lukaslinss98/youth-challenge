@@ -1,3 +1,5 @@
+import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +10,7 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useRegister } from '../api/use-register';
+import { useSessionStore } from '../store/session-store';
 
 type RegisterFormValues = {
   email: string;
@@ -28,6 +31,14 @@ export function RegisterScreen() {
   };
 
   const result = registerMutation.data;
+  const setToken = useSessionStore((state) => state.setToken);
+
+  useEffect(() => {
+    if (result?.type === 'success') {
+      setToken(result.token);
+      router.replace('/(tabs)');
+    }
+  }, [result, setToken]);
 
   return (
     <ThemedView style={styles.container}>
@@ -93,9 +104,6 @@ export function RegisterScreen() {
             </ThemedText>
           </Pressable>
 
-          {result?.type === 'success' && (
-            <ThemedText type="small">Account created for {result.user.email}.</ThemedText>
-          )}
           {result?.type === 'userExists' && (
             <ThemedText type="small">An account with this email already exists.</ThemedText>
           )}

@@ -23,7 +23,7 @@ async function registerUser({ email, password }: RegisterInput): Promise<Registe
 
   if (response.status === 201) {
     const body = await response.json();
-    return { type: 'success', user: body.user };
+    return { type: 'success', user: body.user, token: body.token };
   }
 
   if (response.status === 409) {

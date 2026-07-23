@@ -4,6 +4,6 @@ export type RegisteredUser = {
 };
 
 export type RegisterResult =
-  | { type: 'success'; user: RegisteredUser }
+  | { type: 'success'; user: RegisteredUser; token: string }
   | { type: 'userExists' }
   | { type: 'error'; message: string };
