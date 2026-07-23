@@ -9,26 +9,26 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { FormTextInput } from '@/shared/components/form-text-input';
 
-import { useRegister } from '../api/use-register';
+import { useLogin } from '../api/use-login';
 import { useSessionStore } from '../store/session-store';
 
-type RegisterFormValues = {
+type LoginFormValues = {
   email: string;
   password: string;
 };
 
-export function RegisterScreen() {
+export function LoginScreen() {
   const theme = useTheme();
-  const registerMutation = useRegister();
+  const loginMutation = useLogin();
   const setToken = useSessionStore((state) => state.setToken);
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormValues>({ defaultValues: { email: '', password: '' } });
+  } = useForm<LoginFormValues>({ defaultValues: { email: '', password: '' } });
 
-  const onSubmit = (values: RegisterFormValues) => {
-    registerMutation.mutate(values, {
+  const onSubmit = (values: LoginFormValues) => {
+    loginMutation.mutate(values, {
       onSuccess: (result) => {
         if (result.type === 'success') {
           setToken(result.token);
@@ -37,13 +37,13 @@ export function RegisterScreen() {
     });
   };
 
-  const result = registerMutation.data;
+  const result = loginMutation.data;
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ThemedText type="title" style={styles.title}>
-          Create account
+          Log in
         </ThemedText>
 
         <ThemedView style={styles.form}>
@@ -65,33 +65,30 @@ export function RegisterScreen() {
             name="password"
             placeholder="Password"
             secureTextEntry
-            rules={{
-              required: 'Password is required',
-              minLength: { value: 8, message: 'Password must be at least 8 characters' },
-            }}
+            rules={{ required: 'Password is required' }}
             errorMessage={errors.password?.message}
           />
 
           <Pressable
             onPress={handleSubmit(onSubmit)}
-            disabled={registerMutation.isPending}
+            disabled={loginMutation.isPending}
             style={({ pressed }) => [
               styles.submitButton,
               { backgroundColor: theme.backgroundElement },
               pressed && styles.pressed,
             ]}>
             <ThemedText type="smallBold">
-              {registerMutation.isPending ? 'Creating account…' : 'Register'}
+              {loginMutation.isPending ? 'Logging in…' : 'Log in'}
             </ThemedText>
           </Pressable>
 
-          {result?.type === 'userExists' && (
-            <ThemedText type="small">An account with this email already exists.</ThemedText>
+          {result?.type === 'invalidCredentials' && (
+            <ThemedText type="small">Incorrect email or password.</ThemedText>
           )}
           {result?.type === 'error' && <ThemedText type="small">{result.message}</ThemedText>}
 
-          <Link href="/login">
-            <ThemedText type="link">Already have an account? Log in</ThemedText>
+          <Link href="/register">
+            <ThemedText type="link">Don&apos;t have an account? Register</ThemedText>
           </Link>
         </ThemedView>
       </SafeAreaView>
@@ -107,9 +104,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
+    justifyContent: 'center',
   },
   title: {
-    marginTop: Spacing.five,
+    textAlign: 'center',
   },
   form: {
     gap: Spacing.three,

@@ -1,5 +1,4 @@
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -13,14 +12,6 @@ export default function HomeScreen() {
         <ThemedText type="title" style={styles.title}>
           YOU(th)
         </ThemedText>
-
-        <Link href="/register" asChild>
-          <Pressable style={({ pressed }) => pressed && styles.pressed}>
-            <ThemedView type="backgroundElement" style={styles.stepContainer}>
-              <ThemedText type="link">Create an account</ThemedText>
-            </ThemedView>
-          </Pressable>
-        </Link>
       </SafeAreaView>
     </ThemedView>
   );
@@ -43,15 +34,5 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: 'center',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });
