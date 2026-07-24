@@ -26,6 +26,11 @@ class JunctionAccountRepositoryImpl implements JunctionAccounts {
   }
 
   @Override
+  public Optional<UUID> userIdByJunctionUserId(UUID junctionUserId) {
+    return jpaRepository.findByJunctionUserId(junctionUserId).map(JunctionAccountV1::getUserId);
+  }
+
+  @Override
   public void link(UUID userId, UUID junctionUserId) {
     jpaRepository.save(new JunctionAccountV1(userId, junctionUserId, LocalDateTime.now()));
   }

@@ -12,7 +12,6 @@ type DeviceRowProps = {
   onPress?: () => void;
 };
 
-/** A single selectable device in the "Select a device" sheet. */
 export function DeviceRow({ name, icon: Icon, status = 'NOT CONNECTED', onPress }: DeviceRowProps) {
   return (
     <Pressable
@@ -21,7 +20,7 @@ export function DeviceRow({ name, icon: Icon, status = 'NOT CONNECTED', onPress 
       <Icon color={c.text} size={22} />
       <View style={styles.text}>
         <Text style={styles.name}>{name}</Text>
-        <Text style={styles.status}>{status}</Text>
+        <Text style={[styles.status, status === 'CONNECTED' && styles.statusConnected]}>{status}</Text>
       </View>
       <ChevronRight color={c.textSecondary} size={20} />
     </Pressable>
@@ -47,5 +46,8 @@ const styles = StyleSheet.create({
   status: {
     ...Typography.caps10,
     color: c.textSecondary,
+  },
+  statusConnected: {
+    color: c.textSuccess,
   },
 });

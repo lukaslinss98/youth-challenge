@@ -7,9 +7,11 @@ import com.junction.api.resources.link.requests.LinkTokenExchange;
 import com.junction.api.resources.user.requests.UserCreateBody;
 import com.junction.api.types.ClientFacingUser;
 import com.junction.api.types.LinkTokenExchangeResponse;
+import com.junction.api.types.Providers;
 import com.youth.wearables.externaldevices.application.ports.JunctionApi;
 import com.youth.wearables.externaldevices.domain.JunctionApiException;
 import com.youth.wearables.externaldevices.domain.LinkToken;
+import com.youth.wearables.externaldevices.domain.WearableProvider;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -39,10 +41,13 @@ class JunctionApiAdapter implements JunctionApi {
   }
 
   @Override
-  public LinkToken createLinkToken(UUID junctionUserId) {
+  public LinkToken createLinkToken(UUID junctionUserId, WearableProvider provider) {
     try {
       LinkTokenExchange linkTokenExchange =
-          LinkTokenExchange.builder().userId(junctionUserId.toString()).build();
+          LinkTokenExchange.builder()
+              .userId(junctionUserId.toString())
+              .provider(toJunctionProvider(provider))
+              .build();
 
       LinkTokenExchangeResponse res = junction.link().token(linkTokenExchange);
 
@@ -53,5 +58,11 @@ class JunctionApiAdapter implements JunctionApi {
     } catch (JunctionException e) {
       throw new JunctionApiException("Junction createLinkToken failed", e);
     }
+  }
+
+  private static Providers toJunctionProvider(WearableProvider provider) {
+    return switch (provider) {
+      case WHOOP -> Providers.WHOOP_V_2;
+    };
   }
 }

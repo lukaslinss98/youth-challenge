@@ -2,17 +2,22 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Typography } from '@/constants/theme';
+import { useDevices } from '@/features/devices/api/use-devices';
 import { AppleIcon, GarminIcon, OuraIcon, WhoopIcon } from '@/features/home/components/device-icons';
 import { DeviceRow } from '@/features/home/components/device-row';
 
 const c = Colors.light;
 
 const DEVICES = [
-  { name: 'Apple Watch', icon: AppleIcon },
-  { name: 'Oura', icon: OuraIcon },
-  { name: 'Garmin', icon: GarminIcon },
-  { name: 'Whoop', icon: WhoopIcon },
+  { name: 'Apple Watch', icon: AppleIcon, slugs: ['apple_health_kit'] },
+  { name: 'Oura', icon: OuraIcon, slugs: ['oura'] },
+  { name: 'Garmin', icon: GarminIcon, slugs: ['garmin'] },
+  { name: 'Whoop', icon: WhoopIcon, slugs: ['whoop', 'whoop_v2'] },
 ] as const;
+
+function statusLabel(status: string) {
+  return status === 'CONNECTED' ? 'CONNECTED' : status.replace(/_/g, ' ');
+}
 
 /** Bottom sheet shown when the user chooses to connect a device. Slides up over
  * a dimmed backdrop; tapping the backdrop or a device closes it. */
@@ -26,6 +31,8 @@ export function ConnectDeviceSheet({
   onSelect?: (device: string) => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { data: devices } = useDevices();
+  const statusBySlug = new Map((devices ?? []).map((d) => [d.provider, d.status]));
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -36,14 +43,18 @@ export function ConnectDeviceSheet({
           <Text style={styles.title}>Select a device</Text>
 
           <View style={styles.list}>
-            {DEVICES.map((d) => (
-              <DeviceRow
-                key={d.name}
-                name={d.name}
-                icon={d.icon}
-                onPress={() => onSelect?.(d.name)}
-              />
-            ))}
+            {DEVICES.map((d) => {
+              const connected = d.slugs.map((slug) => statusBySlug.get(slug)).find(Boolean);
+              return (
+                <DeviceRow
+                  key={d.name}
+                  name={d.name}
+                  icon={d.icon}
+                  status={connected ? statusLabel(connected) : 'NOT CONNECTED'}
+                  onPress={() => onSelect?.(d.name)}
+                />
+              );
+            })}
           </View>
 
           <View style={styles.divider} />

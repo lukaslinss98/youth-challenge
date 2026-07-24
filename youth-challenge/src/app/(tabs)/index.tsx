@@ -1,11 +1,16 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { useRef, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Primitives, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/features/auth/store/session-store';
+import { DEVICES_QUERY_KEY } from '@/features/devices/api/use-devices';
+import { useLinkToken } from '@/features/devices/api/use-link-token';
+import { ConnectedDevices } from '@/features/devices/components/connected-devices';
 import { BiomarkerPill } from '@/features/home/components/biomarker-pill';
 import { CarouselDots } from '@/features/home/components/carousel-dots';
 import { ConnectDeviceCard } from '@/features/home/components/connect-device-card';
@@ -29,12 +34,47 @@ export default function HomeScreen() {
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
   const [whoopPromptOpen, setWhoopPromptOpen] = useState(false);
   const [whoopSheetOpen, setWhoopSheetOpen] = useState(false);
+  const showConnectedAfterDismiss = useRef(false);
+  const linkTokenMutation = useLinkToken();
+  const queryClient = useQueryClient();
 
   const handleSelectDevice = (device: string) => {
     setDeviceSheetOpen(false);
     if (device === 'Whoop') {
       setWhoopPromptOpen(true);
     }
+  };
+
+  const handleConnectWhoop = () => {
+    if (linkTokenMutation.isPending) return;
+    linkTokenMutation.mutate('whoop', {
+      onSuccess: async (result) => {
+        if (result.type !== 'success') {
+          const message =
+            result.type === 'notProvisioned'
+              ? 'Your account is still being set up. Please try again in a moment.'
+              : result.type === 'unauthorized'
+                ? 'Your session has expired. Please sign in again.'
+                : result.message;
+          Alert.alert('Could not connect', message);
+          return;
+        }
+        try {
+          await WebBrowser.openBrowserAsync(result.linkWebUrl);
+        } catch {
+          Alert.alert('Could not connect', 'Could not open the connection page. Please try again.');
+          return;
+        }
+        queryClient.invalidateQueries({ queryKey: DEVICES_QUERY_KEY });
+        if (Platform.OS === 'ios') {
+          showConnectedAfterDismiss.current = true;
+          setWhoopPromptOpen(false);
+        } else {
+          setWhoopPromptOpen(false);
+          setWhoopSheetOpen(true);
+        }
+      },
+    });
   };
 
   return (
@@ -76,6 +116,7 @@ export default function HomeScreen() {
 
       <View style={styles.sheet}>
         <Text style={styles.sheetTitle}>Health areas to improve</Text>
+        <ConnectedDevices />
       </View>
     </ScrollView>
 
@@ -88,9 +129,12 @@ export default function HomeScreen() {
     <WhoopConnectPromptSheet
       visible={whoopPromptOpen}
       onCancel={() => setWhoopPromptOpen(false)}
-      onContinue={() => {
-        setWhoopPromptOpen(false);
-        setWhoopSheetOpen(true);
+      onContinue={handleConnectWhoop}
+      onDismiss={() => {
+        if (showConnectedAfterDismiss.current) {
+          showConnectedAfterDismiss.current = false;
+          setWhoopSheetOpen(true);
+        }
       }}
     />
 

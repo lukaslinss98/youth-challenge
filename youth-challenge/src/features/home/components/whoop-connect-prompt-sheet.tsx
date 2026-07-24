@@ -10,15 +10,22 @@ export function WhoopConnectPromptSheet({
   visible,
   onCancel,
   onContinue,
+  onDismiss,
 }: {
   visible: boolean;
   onCancel: () => void;
   onContinue: () => void;
+  onDismiss?: () => void;
 }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onCancel}
+      onDismiss={onDismiss}>
       <Pressable style={styles.backdrop} onPress={onCancel} />
       <View style={styles.container} pointerEvents="box-none">
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}>
