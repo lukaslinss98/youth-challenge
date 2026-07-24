@@ -1,4 +1,4 @@
-package com.youth.wearables.usermanagement.infrastructure.persistence;
+package com.youth.wearables.usermanagement.infrastructure.persistence.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "app_user")
-class UserV1 {
+public class UserV1 {
 
   @Id private UUID id;
 
@@ -30,7 +30,8 @@ class UserV1 {
 
   protected UserV1() {}
 
-  UserV1(UUID id, String email, String username, String passwordHash, LocalDateTime createdAt) {
+  public UserV1(
+      UUID id, String email, String username, String passwordHash, LocalDateTime createdAt) {
     this.id = id;
     this.email = email;
     this.username = username;
@@ -39,23 +40,23 @@ class UserV1 {
     this.updatedAt = createdAt;
   }
 
-  UUID getId() {
+  public UUID getId() {
     return id;
   }
 
-  String getEmail() {
+  public String getEmail() {
     return email;
   }
 
-  String getUsername() {
+  public String getUsername() {
     return username;
   }
 
-  String getPasswordHash() {
+  public String getPasswordHash() {
     return passwordHash;
   }
 
-  LocalDateTime getCreatedAt() {
+  public LocalDateTime getCreatedAt() {
     return createdAt;
   }
 }

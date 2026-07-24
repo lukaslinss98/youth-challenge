@@ -1,4 +1,4 @@
-package com.youth.wearables.externaldevices.infrastructure.persistence;
+package com.youth.wearables.externaldevices.infrastructure.persistence.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "junction_account")
-class JunctionAccountV1 {
+public class JunctionAccountV1 {
 
   @Id
   @Column(name = "user_id")
@@ -23,21 +23,21 @@ class JunctionAccountV1 {
 
   protected JunctionAccountV1() {}
 
-  JunctionAccountV1(UUID userId, UUID junctionUserId, LocalDateTime createdAt) {
+  public JunctionAccountV1(UUID userId, UUID junctionUserId, LocalDateTime createdAt) {
     this.userId = userId;
     this.junctionUserId = junctionUserId;
     this.createdAt = createdAt;
   }
 
-  UUID getUserId() {
+  public UUID getUserId() {
     return userId;
   }
 
-  UUID getJunctionUserId() {
+  public UUID getJunctionUserId() {
     return junctionUserId;
   }
 
-  LocalDateTime getCreatedAt() {
+  public LocalDateTime getCreatedAt() {
     return createdAt;
   }
 }

@@ -1,4 +1,4 @@
-package com.youth.wearables.externaldevices.infrastructure.webhooks;
+package com.youth.wearables.externaldevices.infrastructure.webhooks.events;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,17 +7,17 @@ import java.util.List;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-record DailyDataEvent(Data data) {
+public record DailyDataEvent(Data data) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record Data(
+  public record Data(
       @JsonProperty("user_id") UUID userId, Provider provider, List<Point> data) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record Provider(String slug) {}
+  public record Provider(String slug) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record Point(
+  public record Point(
       OffsetDateTime timestamp,
       Double value,
       Double systolic,

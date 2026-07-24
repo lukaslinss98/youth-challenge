@@ -1,6 +1,7 @@
 package com.youth.wearables.externaldevices.infrastructure.persistence;
 
 import com.youth.wearables.externaldevices.application.ports.JunctionAccounts;
+import com.youth.wearables.externaldevices.infrastructure.persistence.entities.JunctionAccountV1;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;

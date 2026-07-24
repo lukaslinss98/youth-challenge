@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Primitives, Radius, Typography } from '@/constants/theme';
 import { useDisconnectDevice } from '@/features/devices/api/use-disconnect-device';
 import { useSyncVitals } from '@/features/devices/api/use-sync-vitals';
-import { DeviceOption } from '@/features/home/components/connect-device-sheet';
+import { DeviceOption } from '@/features/home/components/device-options';
 
 const c = Colors.light;
 

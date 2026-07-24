@@ -1,4 +1,4 @@
-package com.youth.wearables.externaldevices.infrastructure.persistence;
+package com.youth.wearables.externaldevices.infrastructure.persistence.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "vital_reading")
-class VitalReadingV1 {
+public class VitalReadingV1 {
 
   @Id
   @Column(name = "id")

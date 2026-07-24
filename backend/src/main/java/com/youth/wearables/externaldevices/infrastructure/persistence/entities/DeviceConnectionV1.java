@@ -1,4 +1,4 @@
-package com.youth.wearables.externaldevices.infrastructure.persistence;
+package com.youth.wearables.externaldevices.infrastructure.persistence.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "device_connection")
-class DeviceConnectionV1 {
+public class DeviceConnectionV1 {
 
   @Id
   @Column(name = "id")
@@ -32,7 +32,7 @@ class DeviceConnectionV1 {
 
   protected DeviceConnectionV1() {}
 
-  DeviceConnectionV1(
+  public DeviceConnectionV1(
       UUID id,
       UUID userId,
       String providerSlug,
@@ -47,27 +47,27 @@ class DeviceConnectionV1 {
     this.updatedAt = updatedAt;
   }
 
-  UUID getId() {
+  public UUID getId() {
     return id;
   }
 
-  String getProviderSlug() {
+  public String getProviderSlug() {
     return providerSlug;
   }
 
-  String getStatus() {
+  public String getStatus() {
     return status;
   }
 
-  LocalDateTime getUpdatedAt() {
+  public LocalDateTime getUpdatedAt() {
     return updatedAt;
   }
 
-  void setStatus(String status) {
+  public void setStatus(String status) {
     this.status = status;
   }
 
-  void setUpdatedAt(LocalDateTime updatedAt) {
+  public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
   }
 }

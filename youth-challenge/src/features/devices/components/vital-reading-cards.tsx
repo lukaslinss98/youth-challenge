@@ -13,6 +13,11 @@ const METRIC_LABELS: Record<string, string> = {
   BLOOD_PRESSURE: 'Blood Pressure',
 };
 
+export function metricLabel(metric: string) {
+  if (metric.startsWith('BLOOD_PRESSURE')) return METRIC_LABELS.BLOOD_PRESSURE;
+  return METRIC_LABELS[metric] ?? metric;
+}
+
 type Card = { key: string; label: string; value: string; unit: string; measuredAt: string };
 
 function formatValue(value: number) {

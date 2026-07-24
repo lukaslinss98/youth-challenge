@@ -1,29 +1,21 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Primitives, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/features/auth/store/session-store';
-import { DEVICES_QUERY_KEY } from '@/features/devices/api/use-devices';
-import { useLinkToken } from '@/features/devices/api/use-link-token';
-import { VITALS_QUERY_KEY } from '@/features/devices/api/use-vitals';
 import { BiomarkerPill } from '@/features/home/components/biomarker-pill';
 import { CarouselDots } from '@/features/home/components/carousel-dots';
 import { ConnectDeviceCard } from '@/features/home/components/connect-device-card';
-import { ConnectDeviceSheet, DeviceOption } from '@/features/home/components/connect-device-sheet';
+import { ConnectFlowSheet } from '@/features/home/components/connect-flow/connect-flow-sheet';
 import { DeviceActionsSheet } from '@/features/home/components/device-actions-sheet';
-import { DemoConnectSheet } from '@/features/home/components/demo-connect-sheet';
+import { DeviceOption } from '@/features/home/components/device-options';
 import { HealthScoreGauge } from '@/features/home/components/health-score-gauge';
 import { HomeHeader } from '@/features/home/components/home-header';
-import { WhoopConnectPromptSheet } from '@/features/home/components/whoop-connect-prompt-sheet';
 
 const c = Colors.light;
-
-const DEMO_CAPABLE_SLUGS = ['oura', 'apple_health_kit'];
 
 /** Warm aurora background, approximated with a vertical base gradient plus a
  * diagonal amber glow layered on top. */
@@ -34,53 +26,11 @@ export default function HomeScreen() {
   const router = useRouter();
   const user = useSessionStore((state) => state.user);
   const username = user?.username?.trim();
-  const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
+  const [connectFlowOpen, setConnectFlowOpen] = useState(false);
   const [actionDevice, setActionDevice] = useState<{
     option: DeviceOption;
     provider: string;
   } | null>(null);
-  const [whoopPromptOpen, setWhoopPromptOpen] = useState(false);
-  const [demoDevice, setDemoDevice] = useState<DeviceOption | null>(null);
-  const linkTokenMutation = useLinkToken();
-  const queryClient = useQueryClient();
-
-  const handleSelectDevice = (device: DeviceOption, connectedProvider: string | null) => {
-    setDeviceSheetOpen(false);
-    if (connectedProvider) {
-      setActionDevice({ option: device, provider: connectedProvider });
-    } else if (device.name === 'Whoop') {
-      setWhoopPromptOpen(true);
-    } else if (DEMO_CAPABLE_SLUGS.includes(device.slugs[0])) {
-      setDemoDevice(device);
-    }
-  };
-
-  const handleConnectWhoop = () => {
-    if (linkTokenMutation.isPending) return;
-    linkTokenMutation.mutate('whoop', {
-      onSuccess: async (result) => {
-        if (result.type !== 'success') {
-          const message =
-            result.type === 'notProvisioned'
-              ? 'Your account is still being set up. Please try again in a moment.'
-              : result.type === 'unauthorized'
-                ? 'Your session has expired. Please sign in again.'
-                : result.message;
-          Alert.alert('Could not connect', message);
-          return;
-        }
-        try {
-          await WebBrowser.openBrowserAsync(result.linkWebUrl);
-        } catch {
-          Alert.alert('Could not connect', 'Could not open the connection page. Please try again.');
-          return;
-        }
-        queryClient.invalidateQueries({ queryKey: DEVICES_QUERY_KEY });
-        queryClient.invalidateQueries({ queryKey: VITALS_QUERY_KEY });
-        setWhoopPromptOpen(false);
-      },
-    });
-  };
 
   return (
     <>
@@ -112,7 +62,7 @@ export default function HomeScreen() {
             <CarouselDots count={2} active={0} />
           </View>
 
-          <ConnectDeviceCard onConnect={() => setDeviceSheetOpen(true)} />
+          <ConnectDeviceCard onConnect={() => setConnectFlowOpen(true)} />
           <View style={styles.cardDots}>
             <CarouselDots count={4} active={0} />
           </View>
@@ -124,21 +74,13 @@ export default function HomeScreen() {
       </View>
     </ScrollView>
 
-    <ConnectDeviceSheet
-      visible={deviceSheetOpen}
-      onClose={() => setDeviceSheetOpen(false)}
-      onSelect={handleSelectDevice}
+    <ConnectFlowSheet
+      visible={connectFlowOpen}
+      onClose={() => setConnectFlowOpen(false)}
+      onSelectConnected={(option, provider) => setActionDevice({ option, provider })}
     />
 
     <DeviceActionsSheet device={actionDevice} onClose={() => setActionDevice(null)} />
-
-    <DemoConnectSheet device={demoDevice} onClose={() => setDemoDevice(null)} />
-
-    <WhoopConnectPromptSheet
-      visible={whoopPromptOpen}
-      onCancel={() => setWhoopPromptOpen(false)}
-      onContinue={handleConnectWhoop}
-    />
     </>
   );
 }

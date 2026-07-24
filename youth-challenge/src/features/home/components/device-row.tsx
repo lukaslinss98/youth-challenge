@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 import { Colors, Radius, Typography } from '@/constants/theme';
 import { ChevronRight } from '@/features/home/components/device-icons';
@@ -11,6 +11,7 @@ type DeviceRowProps = {
   status?: string;
   onPress?: () => void;
   expanded?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function DeviceRow({
@@ -19,11 +20,12 @@ export function DeviceRow({
   status = 'NOT CONNECTED',
   onPress,
   expanded,
+  style,
 }: DeviceRowProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.row, style, pressed && styles.pressed]}>
       <Icon color={c.text} size={22} />
       <View style={styles.text}>
         <Text style={styles.name}>{name}</Text>

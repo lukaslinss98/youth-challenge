@@ -1,5 +1,6 @@
 package com.youth.wearables.externaldevices.infrastructure.persistence;
 
+import com.youth.wearables.externaldevices.infrastructure.persistence.entities.VitalReadingV1;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;

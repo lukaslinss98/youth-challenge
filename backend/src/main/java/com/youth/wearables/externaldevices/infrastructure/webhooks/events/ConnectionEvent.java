@@ -1,15 +1,15 @@
-package com.youth.wearables.externaldevices.infrastructure.webhooks;
+package com.youth.wearables.externaldevices.infrastructure.webhooks.events;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-record ConnectionEvent(Data data) {
+public record ConnectionEvent(Data data) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record Data(@JsonProperty("user_id") UUID userId, Provider provider) {}
+  public record Data(@JsonProperty("user_id") UUID userId, Provider provider) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  record Provider(String slug) {}
+  public record Provider(String slug) {}
 }

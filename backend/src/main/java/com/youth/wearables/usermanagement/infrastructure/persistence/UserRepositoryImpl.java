@@ -2,6 +2,7 @@ package com.youth.wearables.usermanagement.infrastructure.persistence;
 
 import com.youth.wearables.usermanagement.application.repositories.UserRepository;
 import com.youth.wearables.usermanagement.domain.User;
+import com.youth.wearables.usermanagement.infrastructure.persistence.entities.UserV1;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;

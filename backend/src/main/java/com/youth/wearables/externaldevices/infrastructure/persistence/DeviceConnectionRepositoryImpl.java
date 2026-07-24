@@ -3,6 +3,7 @@ package com.youth.wearables.externaldevices.infrastructure.persistence;
 import com.youth.wearables.externaldevices.application.ports.DeviceConnections;
 import com.youth.wearables.externaldevices.domain.ConnectionStatus;
 import com.youth.wearables.externaldevices.domain.DeviceConnection;
+import com.youth.wearables.externaldevices.infrastructure.persistence.entities.DeviceConnectionV1;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
