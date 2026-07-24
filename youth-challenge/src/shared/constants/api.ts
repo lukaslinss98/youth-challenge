@@ -1,2 +1,2 @@
-// Replace with your machine's LAN IP so physical devices/simulators can reach the backend.
-export const API_BASE_URL = 'http://localhost:8080';
+// export const API_BASE_URL = 'http://localhost:8080';
+export const API_BASE_URL = 'http://10.108.224.224:8080';

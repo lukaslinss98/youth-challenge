@@ -46,16 +46,25 @@ export function ConnectFlowSheet({
   const { data: devices } = useDevices();
   const [stage, setStage] = useState<Stage>(1);
   const [promptDevice, setPromptDevice] = useState<DeviceOption | null>(null);
+  const [syncedDevice, setSyncedDevice] = useState<DeviceOption | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [linking, setLinking] = useState(false);
   const { data: readings } = useVitals({ pollMs: stage === 2 || stage === 3 ? 4000 : undefined });
 
   const statusBySlug = new Map((devices ?? []).map((device) => [device.provider, device.status]));
   const whoopConnected = WHOOP_SLUGS.some((slug) => statusBySlug.get(slug) === 'CONNECTED');
-  const biomarkers = [...new Set((readings ?? []).map((reading) => metricLabel(reading.metric)))];
+  const syncedSlugs: readonly string[] | null = syncedDevice ? syncedDevice.slugs : null;
+  const biomarkers = [
+    ...new Set(
+      (readings ?? [])
+        .filter((reading) => !syncedSlugs || syncedSlugs.includes(reading.provider))
+        .map((reading) => metricLabel(reading.metric)),
+    ),
+  ];
 
   if (linking && whoopConnected && stage === 1) {
     setLinking(false);
+    setSyncedDevice(promptDevice);
     setPromptDevice(null);
     setStage(2);
   }
@@ -63,6 +72,7 @@ export function ConnectFlowSheet({
   const reset = () => {
     setStage(1);
     setPromptDevice(null);
+    setSyncedDevice(null);
     setError(null);
     setLinking(false);
   };
@@ -87,6 +97,7 @@ export function ConnectFlowSheet({
     demoConnect.mutate(device.slugs[0], {
       onSuccess: (result) => {
         if (result.type === 'success') {
+          setSyncedDevice(device);
           setPromptDevice(null);
           setStage(2);
           return;

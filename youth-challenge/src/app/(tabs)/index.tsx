@@ -1,25 +1,23 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Primitives, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/features/auth/store/session-store';
+import { ActionCardCarousel } from '@/features/home/components/action-cards/action-card-carousel';
 import { BiomarkerPill } from '@/features/home/components/biomarker-pill';
 import { CarouselDots } from '@/features/home/components/carousel-dots';
-import { ConnectDeviceCard } from '@/features/home/components/connect-device-card';
 import { ConnectFlowSheet } from '@/features/home/components/connect-flow/connect-flow-sheet';
 import { DeviceActionsSheet } from '@/features/home/components/device-actions-sheet';
 import { DeviceOption } from '@/features/home/components/device-options';
+import { HealthAreaRow } from '@/features/home/components/health-areas/health-area-row';
+import { HealthAreas } from '@/features/home/components/health-areas/health-areas';
 import { HealthScoreGauge } from '@/features/home/components/health-score-gauge';
+import { HomeFooter } from '@/features/home/components/home-footer';
 import { HomeHeader } from '@/features/home/components/home-header';
 
 const c = Colors.light;
-
-/** Warm aurora background, approximated with a vertical base gradient plus a
- * diagonal amber glow layered on top. */
-const BASE_GRADIENT = ['#241C1A', '#3A2A20', '#5E3F28', '#7A5233', '#835836'] as const;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -38,15 +36,10 @@ export default function HomeScreen() {
       style={styles.root}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
-        <LinearGradient colors={BASE_GRADIENT} style={StyleSheet.absoluteFill} />
-        <LinearGradient
-          colors={['rgba(255,136,17,0.22)', 'rgba(255,136,17,0)']}
-          start={{ x: 0, y: 0.15 }}
-          end={{ x: 0.9, y: 0.8 }}
-          style={StyleSheet.absoluteFill}
-        />
-
+      <ImageBackground
+        source={require('@/assets/images/home-aurora.png')}
+        style={styles.hero}
+        imageStyle={styles.heroImage}>
         <View style={[styles.heroContent, { paddingTop: insets.top + 12 }]}>
           <HomeHeader
             name={username || 'Add your name'}
@@ -56,21 +49,30 @@ export default function HomeScreen() {
 
           <View style={styles.scoreBlock}>
             <Text style={styles.h1}>Health Score</Text>
-            <Text style={styles.updating}>UPDATING...</Text>
+            <Text style={styles.updated}>UPDATED TODAY</Text>
             <HealthScoreGauge score={99} label="Optimal" />
             <BiomarkerPill count={4} total={10} />
             <CarouselDots count={2} active={0} />
           </View>
-
-          <ConnectDeviceCard onConnect={() => setConnectFlowOpen(true)} />
-          <View style={styles.cardDots}>
-            <CarouselDots count={4} active={0} />
-          </View>
         </View>
-      </View>
+
+        <View style={styles.carouselBlock}>
+          <ActionCardCarousel onConnect={() => setConnectFlowOpen(true)} />
+        </View>
+      </ImageBackground>
 
       <View style={styles.sheet}>
         <Text style={styles.sheetTitle}>Health areas to improve</Text>
+        <HealthAreas />
+
+        <Text style={styles.sheetTitle}>Health areas to unlock</Text>
+        <HealthAreaRow
+          name="Face skin"
+          subtitle="Run checkup to see results"
+          actionLabel="CHECK"
+        />
+
+        <HomeFooter />
       </View>
     </ScrollView>
 
@@ -95,10 +97,13 @@ const styles = StyleSheet.create({
   },
   hero: {
     overflow: 'hidden',
+    backgroundColor: '#241C1A',
+  },
+  heroImage: {
+    resizeMode: 'cover',
   },
   heroContent: {
     paddingHorizontal: 24,
-    paddingBottom: 48,
     gap: 24,
   },
   scoreBlock: {
@@ -112,13 +117,14 @@ const styles = StyleSheet.create({
     color: Primitives.white,
     marginTop: 8,
   },
-  updating: {
+  updated: {
     ...Typography.caps12,
     color: 'rgba(255,255,255,0.55)',
     letterSpacing: 2,
   },
-  cardDots: {
-    marginTop: 4,
+  carouselBlock: {
+    paddingTop: 24,
+    paddingBottom: 48,
   },
   sheet: {
     backgroundColor: c.appBackground,
@@ -127,10 +133,12 @@ const styles = StyleSheet.create({
     marginTop: -28,
     paddingTop: 32,
     paddingHorizontal: 24,
-    minHeight: 160,
+    paddingBottom: 8,
+    gap: 20,
   },
   sheetTitle: {
     ...Typography.title24,
     color: Primitives.black,
+    marginTop: 8,
   },
 });
