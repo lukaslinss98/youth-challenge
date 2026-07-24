@@ -4,9 +4,9 @@ import com.youth.wearables.externaldevices.application.ports.DeviceConnections;
 import com.youth.wearables.externaldevices.application.ports.JunctionAccounts;
 import com.youth.wearables.externaldevices.application.ports.VitalReadings;
 import com.youth.wearables.externaldevices.application.ports.WearableVitalsApi;
-import com.youth.wearables.externaldevices.domain.AccountNotProvisionedException;
 import com.youth.wearables.externaldevices.domain.ConnectionStatus;
 import com.youth.wearables.externaldevices.domain.DeviceConnection;
+import com.youth.wearables.externaldevices.domain.JunctionApiException;
 import com.youth.wearables.externaldevices.domain.VitalReading;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -53,8 +53,7 @@ public class VitalSyncService {
   }
 
   public int syncUser(UUID userId, String providerSlug) {
-    UUID junctionUserId =
-        accounts.junctionUserId(userId).orElseThrow(() -> new AccountNotProvisionedException(userId));
+    UUID junctionUserId = accounts.requireJunctionUserId(userId);
 
     LocalDate end = LocalDate.now(ZoneOffset.UTC);
     LocalDate start = end.minusDays(lookbackDays);
@@ -82,7 +81,7 @@ public class VitalSyncService {
       List<VitalReading> readings =
           vitalsApi.fetchAll(junctionUserId, connection.providerSlug(), start, end);
       return vitalReadings.saveAll(connectionId.get(), readings);
-    } catch (RuntimeException e) {
+    } catch (JunctionApiException e) {
       log.warn("Sync fetch failed for {}", connection.providerSlug(), e);
       return 0;
     }

@@ -69,71 +69,95 @@ class JunctionWebhookController {
       return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    WebhookEnvelope envelope;
-    try {
-      envelope = serDes.deserialize(payload, WebhookEnvelope.class);
-    } catch (SerDesException e) {
-      log.warn("Could not read Junction webhook envelope; raw payload: {}", raw(payload), e);
-      return ResponseEntity.ok().build();
-    }
-
-    String eventType = envelope.eventType();
-    log.info("Received Junction webhook event_type={}", eventType);
-
-    if (CONNECTION_CREATED.equals(eventType)) {
-      handleConnectionEvent(payload, CONNECTION_CREATED, eventService::handleConnectionCreated);
-    } else if (CONNECTION_DELETED.equals(eventType)) {
-      handleConnectionEvent(payload, CONNECTION_DELETED, eventService::handleConnectionDeleted);
-    } else if (eventType != null && eventType.startsWith(HISTORICAL_PREFIX)) {
-      String slug = resourceSlug(eventType, HISTORICAL_PREFIX);
-      if (slug != null && HISTORICAL_VITAL_RESOURCES.contains(slug)) {
-        handleHistorical(eventType, payload);
-      }
-    } else if (eventType != null && eventType.startsWith(DAILY_PREFIX)) {
-      resourceFrom(eventType, DAILY_PREFIX)
-          .ifPresent(resource -> handleDaily(eventType, resource, payload));
-    }
+    parseEnvelope(payload)
+        .ifPresent(
+            envelope -> {
+              log.info("Received Junction webhook event_type={}", envelope.eventType());
+              dispatch(envelope.eventType(), payload);
+            });
 
     return ResponseEntity.ok().build();
   }
 
-  private void handleConnectionEvent(
-      byte[] payload, String eventType, BiConsumer<UUID, String> handler) {
-    ConnectionEvent event;
+  private void dispatch(String eventType, byte[] payload) {
+    if (CONNECTION_CREATED.equals(eventType)) {
+      handleConnectionEvent(payload, CONNECTION_CREATED, eventService::handleConnectionCreated);
+    } else if (CONNECTION_DELETED.equals(eventType)) {
+      handleConnectionEvent(payload, CONNECTION_DELETED, eventService::handleConnectionDeleted);
+    } else if (isHistoricalPrefixed(eventType)) {
+      handleHistoricalIfKnownResource(eventType, payload);
+    } else if (isDailyPrefixed(eventType)) {
+      handleDailyIfKnownResource(eventType, payload);
+    }
+  }
+
+  private static boolean isHistoricalPrefixed(String eventType) {
+    return eventType != null && eventType.startsWith(HISTORICAL_PREFIX);
+  }
+
+  private static boolean isDailyPrefixed(String eventType) {
+    return eventType != null && eventType.startsWith(DAILY_PREFIX);
+  }
+
+  private void handleHistoricalIfKnownResource(String eventType, byte[] payload) {
+    String slug = resourceSlug(eventType, HISTORICAL_PREFIX);
+    if (slug != null && HISTORICAL_VITAL_RESOURCES.contains(slug)) {
+      handleHistorical(eventType, payload);
+    }
+  }
+
+  private void handleDailyIfKnownResource(String eventType, byte[] payload) {
+    resourceFrom(eventType, DAILY_PREFIX)
+        .ifPresent(resource -> handleDaily(eventType, resource, payload));
+  }
+
+  private Optional<WebhookEnvelope> parseEnvelope(byte[] payload) {
     try {
-      event = serDes.deserialize(payload, ConnectionEvent.class);
+      return Optional.of(serDes.deserialize(payload, WebhookEnvelope.class));
+    } catch (SerDesException e) {
+      log.warn("Could not read Junction webhook envelope; raw payload: {}", raw(payload), e);
+      return Optional.empty();
+    }
+  }
+
+  private <T> Optional<T> tryDeserialize(byte[] payload, Class<T> type, String eventType) {
+    try {
+      return Optional.of(serDes.deserialize(payload, type));
     } catch (SerDesException e) {
       log.warn("Could not map {} payload: {}", eventType, raw(payload), e);
-      return;
+      return Optional.empty();
     }
+  }
 
-    ConnectionEvent.Data data = event.data();
-    if (data == null
-        || data.userId() == null
-        || data.provider() == null
-        || data.provider().slug() == null) {
-      log.warn("Malformed {} event; raw payload: {}", eventType, raw(payload));
-      return;
-    }
-
-    handler.accept(data.userId(), data.provider().slug());
+  private void handleConnectionEvent(
+      byte[] payload, String eventType, BiConsumer<UUID, String> handler) {
+    tryDeserialize(payload, ConnectionEvent.class, eventType)
+        .map(ConnectionEvent::data)
+        .filter(
+            data ->
+                data != null
+                    && data.userId() != null
+                    && data.provider() != null
+                    && data.provider().slug() != null)
+        .ifPresentOrElse(
+            data -> handler.accept(data.userId(), data.provider().slug()),
+            () -> log.warn("Malformed {} event; raw payload: {}", eventType, raw(payload)));
   }
 
   private void handleHistorical(String eventType, byte[] payload) {
-    HistoricalDataEvent event;
-    try {
-      event = serDes.deserialize(payload, HistoricalDataEvent.class);
-    } catch (SerDesException e) {
-      log.warn("Could not map historical event {}; raw payload: {}", eventType, raw(payload), e);
-      return;
-    }
+    tryDeserialize(payload, HistoricalDataEvent.class, eventType)
+        .map(HistoricalDataEvent::data)
+        .filter(data -> data != null && data.userId() != null && data.provider() != null)
+        .ifPresentOrElse(
+            data -> ingestHistorical(data),
+            () ->
+                log.warn(
+                    "Historical event {} missing user_id/provider; raw payload: {}",
+                    eventType,
+                    raw(payload)));
+  }
 
-    HistoricalDataEvent.Data data = event.data();
-    if (data == null || data.userId() == null || data.provider() == null) {
-      log.warn("Historical event {} missing user_id/provider; raw payload: {}", eventType, raw(payload));
-      return;
-    }
-
+  private void ingestHistorical(HistoricalDataEvent.Data data) {
     LocalDate end =
         data.endDate() != null ? data.endDate().toLocalDate() : LocalDate.now(ZoneOffset.UTC);
     LocalDate start = data.startDate() != null ? data.startDate().toLocalDate() : end.minusDays(30);
@@ -142,25 +166,22 @@ class JunctionWebhookController {
   }
 
   private void handleDaily(String eventType, VitalResource resource, byte[] payload) {
-    DailyDataEvent event;
-    try {
-      event = serDes.deserialize(payload, DailyDataEvent.class);
-    } catch (SerDesException e) {
-      log.warn("Could not map daily event {}; raw payload: {}", eventType, raw(payload), e);
-      return;
-    }
+    tryDeserialize(payload, DailyDataEvent.class, eventType)
+        .map(DailyDataEvent::data)
+        .filter(
+            data -> data != null && data.userId() != null && data.provider() != null && data.data() != null)
+        .ifPresentOrElse(
+            data -> ingestDaily(resource, data),
+            () ->
+                log.warn(
+                    "Daily event {} missing fields; raw payload: {}", eventType, raw(payload)));
+  }
 
-    DailyDataEvent.Data data = event.data();
-    if (data == null || data.userId() == null || data.provider() == null || data.data() == null) {
-      log.warn("Daily event {} missing fields; raw payload: {}", eventType, raw(payload));
-      return;
-    }
-
+  private void ingestDaily(VitalResource resource, DailyDataEvent.Data data) {
     List<VitalReading> readings = toReadings(resource, data.data());
-    if (readings.isEmpty()) {
-      return;
+    if (!readings.isEmpty()) {
+      vitalIngestionService.ingestInline(data.userId(), data.provider().slug(), resource, readings);
     }
-    vitalIngestionService.ingestInline(data.userId(), data.provider().slug(), resource, readings);
   }
 
   private static List<VitalReading> toReadings(

@@ -4,6 +4,7 @@ import com.youth.wearables.externaldevices.application.ports.DeviceConnections;
 import com.youth.wearables.externaldevices.application.ports.JunctionAccounts;
 import com.youth.wearables.externaldevices.application.ports.VitalReadings;
 import com.youth.wearables.externaldevices.application.ports.WearableVitalsApi;
+import com.youth.wearables.externaldevices.domain.JunctionApiException;
 import com.youth.wearables.externaldevices.domain.VitalReading;
 import com.youth.wearables.externaldevices.domain.VitalResource;
 import java.time.LocalDate;
@@ -53,7 +54,7 @@ public class VitalIngestionService {
                     providerSlug,
                     start,
                     end);
-              } catch (RuntimeException e) {
+              } catch (JunctionApiException e) {
                 log.error(
                     "Historical ingest failed for {} junctionUser {}",
                     providerSlug,
@@ -70,16 +71,8 @@ public class VitalIngestionService {
     resolveConnection(junctionUserId, providerSlug)
         .ifPresent(
             connectionId -> {
-              try {
-                int inserted = vitalReadings.saveAll(connectionId, readings);
-                log.info("Ingested {} new inline {} readings", inserted, resource.slug());
-              } catch (RuntimeException e) {
-                log.error(
-                    "Inline ingest failed for {} junctionUser {}",
-                    resource.slug(),
-                    junctionUserId,
-                    e);
-              }
+              int inserted = vitalReadings.saveAll(connectionId, readings);
+              log.info("Ingested {} new inline {} readings", inserted, resource.slug());
             });
   }
 

@@ -3,7 +3,6 @@ package com.youth.wearables.externaldevices.application;
 import com.youth.wearables.externaldevices.application.ports.DeviceConnections;
 import com.youth.wearables.externaldevices.application.ports.JunctionAccounts;
 import com.youth.wearables.externaldevices.application.ports.JunctionApi;
-import com.youth.wearables.externaldevices.domain.AccountNotProvisionedException;
 import com.youth.wearables.externaldevices.domain.ConnectionStatus;
 import com.youth.wearables.externaldevices.domain.DeviceConnection;
 import com.youth.wearables.externaldevices.domain.LinkToken;
@@ -32,30 +31,21 @@ public class DeviceConnectionService {
   }
 
   public LinkToken createLinkToken(UUID userId, WearableProvider provider) {
-    UUID junctionUserId =
-        accounts
-            .junctionUserId(userId)
-            .orElseThrow(() -> new AccountNotProvisionedException(userId));
+    UUID junctionUserId = accounts.requireJunctionUserId(userId);
     LinkToken linkToken = junctionApi.createLinkToken(junctionUserId, provider);
     deviceConnections.markPending(userId, provider.junctionSlug());
     return linkToken;
   }
 
   public void connectDemo(UUID userId, WearableProvider provider) {
-    UUID junctionUserId =
-        accounts
-            .junctionUserId(userId)
-            .orElseThrow(() -> new AccountNotProvisionedException(userId));
+    UUID junctionUserId = accounts.requireJunctionUserId(userId);
     junctionApi.connectDemo(junctionUserId, provider);
     deviceConnections.upsert(userId, provider.slug(), ConnectionStatus.CONNECTED);
     vitalSyncService.syncUserAsync(userId, provider.slug());
   }
 
   public void disconnect(UUID userId, String providerSlug) {
-    UUID junctionUserId =
-        accounts
-            .junctionUserId(userId)
-            .orElseThrow(() -> new AccountNotProvisionedException(userId));
+    UUID junctionUserId = accounts.requireJunctionUserId(userId);
     junctionApi.deregisterProvider(junctionUserId, providerSlug);
     deviceConnections.updateStatus(userId, providerSlug, ConnectionStatus.DISCONNECTED);
   }

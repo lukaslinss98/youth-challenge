@@ -12,7 +12,6 @@ import com.junction.api.types.LinkTokenExchangeResponse;
 import com.junction.api.types.Providers;
 import com.youth.wearables.externaldevices.application.ports.JunctionApi;
 import com.youth.wearables.externaldevices.domain.DemoConnectionException;
-import com.youth.wearables.externaldevices.domain.JunctionApiException;
 import com.youth.wearables.externaldevices.domain.LinkToken;
 import com.youth.wearables.externaldevices.domain.WearableProvider;
 import java.util.UUID;
@@ -29,38 +28,30 @@ class JunctionApiAdapter implements JunctionApi {
 
   @Override
   public UUID createUser(UUID clientUserId) {
-    try {
-      ClientFacingUser created =
-          junction
-              .user()
-              .create(UserCreateBody.builder().clientUserId(clientUserId.toString()).build());
-      return UUID.fromString(created.getUserId());
-    } catch (ApiError e) {
-      throw new JunctionApiException(
-          "Junction createUser failed (status %d)".formatted(e.statusCode()), e);
-    } catch (JunctionException e) {
-      throw new JunctionApiException("Junction createUser failed", e);
-    }
+    ClientFacingUser created =
+        JunctionCalls.execute(
+            () ->
+                junction
+                    .user()
+                    .create(UserCreateBody.builder().clientUserId(clientUserId.toString()).build()),
+            "Junction createUser failed");
+    return UUID.fromString(created.getUserId());
   }
 
   @Override
   public LinkToken createLinkToken(UUID junctionUserId, WearableProvider provider) {
-    try {
-      LinkTokenExchange linkTokenExchange =
-          LinkTokenExchange.builder()
-              .userId(junctionUserId.toString())
-              .provider(toJunctionProvider(provider))
-              .build();
-
-      LinkTokenExchangeResponse res = junction.link().token(linkTokenExchange);
-
-      return new LinkToken(res.getLinkToken(), res.getLinkWebUrl());
-    } catch (ApiError e) {
-      throw new JunctionApiException(
-          "Junction createLinkToken failed (status %d)".formatted(e.statusCode()), e);
-    } catch (JunctionException e) {
-      throw new JunctionApiException("Junction createLinkToken failed", e);
-    }
+    LinkTokenExchangeResponse res =
+        JunctionCalls.execute(
+            () ->
+                junction
+                    .link()
+                    .token(
+                        LinkTokenExchange.builder()
+                            .userId(junctionUserId.toString())
+                            .provider(toJunctionProvider(provider))
+                            .build()),
+            "Junction createLinkToken failed");
+    return new LinkToken(res.getLinkToken(), res.getLinkWebUrl());
   }
 
   @Override
@@ -74,7 +65,8 @@ class JunctionApiAdapter implements JunctionApi {
                   .provider(toDemoProvider(provider))
                   .build());
     } catch (ApiError e) {
-      throw new DemoConnectionException(String.valueOf(e.body()), e);
+      throw new DemoConnectionException(
+          "Junction demo connect failed (status %d)".formatted(e.statusCode()), e);
     } catch (JunctionException e) {
       throw new DemoConnectionException("Junction demo connect failed", e);
     }
@@ -82,14 +74,9 @@ class JunctionApiAdapter implements JunctionApi {
 
   @Override
   public void deregisterProvider(UUID junctionUserId, String providerSlug) {
-    try {
-      junction.user().deregisterProvider(junctionUserId.toString(), Providers.valueOf(providerSlug));
-    } catch (ApiError e) {
-      throw new JunctionApiException(
-          "Junction deregisterProvider failed (status %d)".formatted(e.statusCode()), e);
-    } catch (JunctionException e) {
-      throw new JunctionApiException("Junction deregisterProvider failed", e);
-    }
+    JunctionCalls.execute(
+        () -> junction.user().deregisterProvider(junctionUserId.toString(), Providers.valueOf(providerSlug)),
+        "Junction deregisterProvider failed");
   }
 
   private static Providers toJunctionProvider(WearableProvider provider) {

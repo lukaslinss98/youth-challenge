@@ -31,6 +31,9 @@ abstract class AbstractIntegrationTest {
     registry.add("junction.webhook.secret", () -> SvixSignatureTestHelper.TEST_WEBHOOK_SECRET);
   }
 
+  // @ServiceConnection must annotate the field itself (not a separate factory method) for
+  // Spring Boot to discover and wire the datasource from this container.
+  @ServiceConnection
   static final PostgreSQLContainer POSTGRES =
       new PostgreSQLContainer("postgres:17")
           .withDatabaseName("wearables")
@@ -39,11 +42,6 @@ abstract class AbstractIntegrationTest {
 
   static {
     POSTGRES.start();
-  }
-
-  @ServiceConnection
-  static PostgreSQLContainer postgresConnection() {
-    return POSTGRES;
   }
 
   @MockitoBean protected JunctionApi junctionApi;
