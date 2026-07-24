@@ -15,7 +15,11 @@ const DEVICES = [
   { name: 'Whoop', icon: WhoopIcon, slugs: ['whoop', 'whoop_v2'] },
 ] as const;
 
+export type DeviceOption = (typeof DEVICES)[number];
+
 function statusLabel(status: string) {
+  if (status === 'PENDING') return 'CONNECTING…';
+  if (status === 'ERROR') return 'CONNECTION FAILED';
   return status === 'CONNECTED' ? 'CONNECTED' : status.replace(/_/g, ' ');
 }
 
@@ -28,7 +32,7 @@ export function ConnectDeviceSheet({
 }: {
   visible: boolean;
   onClose: () => void;
-  onSelect?: (device: string) => void;
+  onSelect?: (device: DeviceOption, connectedProvider: string | null) => void;
 }) {
   const insets = useSafeAreaInsets();
   const { data: devices } = useDevices();
@@ -44,14 +48,15 @@ export function ConnectDeviceSheet({
 
           <View style={styles.list}>
             {DEVICES.map((d) => {
-              const connected = d.slugs.map((slug) => statusBySlug.get(slug)).find(Boolean);
+              const slug = d.slugs.find((s) => statusBySlug.get(s));
+              const status = slug ? statusBySlug.get(slug) : undefined;
               return (
                 <DeviceRow
                   key={d.name}
                   name={d.name}
                   icon={d.icon}
-                  status={connected ? statusLabel(connected) : 'NOT CONNECTED'}
-                  onPress={() => onSelect?.(d.name)}
+                  status={status ? statusLabel(status) : 'NOT CONNECTED'}
+                  onPress={() => onSelect?.(d, status === 'CONNECTED' && slug ? slug : null)}
                 />
               );
             })}

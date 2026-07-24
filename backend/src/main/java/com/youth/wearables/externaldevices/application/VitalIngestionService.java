@@ -38,29 +38,25 @@ public class VitalIngestionService {
 
   @Async("vitalIngestionExecutor")
   public void ingestHistorical(
-      UUID junctionUserId,
-      String providerSlug,
-      VitalResource resource,
-      LocalDate start,
-      LocalDate end) {
+      UUID junctionUserId, String providerSlug, LocalDate start, LocalDate end) {
 
     resolveConnection(junctionUserId, providerSlug)
         .ifPresent(
             connectionId -> {
               try {
                 List<VitalReading> readings =
-                    vitalsApi.fetch(junctionUserId, providerSlug, resource, start, end);
-                vitalReadings.saveAll(connectionId, readings);
+                    vitalsApi.fetchAll(junctionUserId, providerSlug, start, end);
+                int inserted = vitalReadings.saveAll(connectionId, readings);
                 log.info(
-                    "Ingested {} historical {} readings [{}..{}]",
-                    readings.size(),
-                    resource.slug(),
+                    "Ingested {} new historical {} readings [{}..{}]",
+                    inserted,
+                    providerSlug,
                     start,
                     end);
               } catch (RuntimeException e) {
                 log.error(
                     "Historical ingest failed for {} junctionUser {}",
-                    resource.slug(),
+                    providerSlug,
                     junctionUserId,
                     e);
               }
@@ -75,8 +71,8 @@ public class VitalIngestionService {
         .ifPresent(
             connectionId -> {
               try {
-                vitalReadings.saveAll(connectionId, readings);
-                log.info("Ingested {} inline {} readings", readings.size(), resource.slug());
+                int inserted = vitalReadings.saveAll(connectionId, readings);
+                log.info("Ingested {} new inline {} readings", inserted, resource.slug());
               } catch (RuntimeException e) {
                 log.error(
                     "Inline ingest failed for {} junctionUser {}",

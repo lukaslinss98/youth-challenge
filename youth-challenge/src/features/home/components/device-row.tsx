@@ -10,9 +10,16 @@ type DeviceRowProps = {
   icon: (p: { color?: string; size?: number }) => React.ReactElement;
   status?: string;
   onPress?: () => void;
+  expanded?: boolean;
 };
 
-export function DeviceRow({ name, icon: Icon, status = 'NOT CONNECTED', onPress }: DeviceRowProps) {
+export function DeviceRow({
+  name,
+  icon: Icon,
+  status = 'NOT CONNECTED',
+  onPress,
+  expanded,
+}: DeviceRowProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -22,7 +29,9 @@ export function DeviceRow({ name, icon: Icon, status = 'NOT CONNECTED', onPress 
         <Text style={styles.name}>{name}</Text>
         <Text style={[styles.status, status === 'CONNECTED' && styles.statusConnected]}>{status}</Text>
       </View>
-      <ChevronRight color={c.textSecondary} size={20} />
+      <View style={expanded ? styles.chevronExpanded : undefined}>
+        <ChevronRight color={c.textSecondary} size={20} />
+      </View>
     </Pressable>
   );
 }
@@ -49,5 +58,8 @@ const styles = StyleSheet.create({
   },
   statusConnected: {
     color: c.textSuccess,
+  },
+  chevronExpanded: {
+    transform: [{ rotate: '90deg' }],
   },
 });

@@ -7,10 +7,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 @Repository
 class DeviceConnectionRepositoryImpl implements DeviceConnections {
+
+  private static final Logger log = LoggerFactory.getLogger(DeviceConnectionRepositoryImpl.class);
 
   private final DeviceConnectionJpaRepository jpaRepository;
 
@@ -20,19 +24,34 @@ class DeviceConnectionRepositoryImpl implements DeviceConnections {
 
   @Override
   public void upsert(UUID userId, String providerSlug, ConnectionStatus status) {
-    LocalDateTime now = LocalDateTime.now();
+    jpaRepository.upsert(
+        UUID.randomUUID(), userId, providerSlug, status.name(), LocalDateTime.now());
+  }
+
+  @Override
+  public void markPending(UUID userId, String providerSlug) {
+    jpaRepository.markPending(UUID.randomUUID(), userId, providerSlug, LocalDateTime.now());
+  }
+
+  @Override
+  public int expirePending(LocalDateTime olderThan) {
+    return jpaRepository.expirePending(
+        ConnectionStatus.ERROR.name(), olderThan, LocalDateTime.now());
+  }
+
+  @Override
+  public void updateStatus(UUID userId, String providerSlug, ConnectionStatus status) {
     jpaRepository
         .findByUserIdAndProviderSlug(userId, providerSlug)
         .ifPresentOrElse(
             existing -> {
               existing.setStatus(status.name());
-              existing.setUpdatedAt(now);
+              existing.setUpdatedAt(LocalDateTime.now());
               jpaRepository.save(existing);
             },
             () ->
-                jpaRepository.save(
-                    new DeviceConnectionV1(
-                        UUID.randomUUID(), userId, providerSlug, status.name(), now, now)));
+                log.warn(
+                    "No device connection to update for user {} provider {}", userId, providerSlug));
   }
 
   @Override

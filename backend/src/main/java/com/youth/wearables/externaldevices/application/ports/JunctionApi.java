@@ -9,4 +9,8 @@ public interface JunctionApi {
   UUID createUser(UUID clientUserId);
 
   LinkToken createLinkToken(UUID junctionUserId, WearableProvider provider);
+
+  void connectDemo(UUID junctionUserId, WearableProvider provider);
+
+  void deregisterProvider(UUID junctionUserId, String providerSlug);
 }

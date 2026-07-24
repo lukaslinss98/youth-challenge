@@ -9,3 +9,11 @@ export type Device = {
   status: string;
   updatedAt: string;
 };
+
+export type VitalReading = {
+  provider: string;
+  metric: string;
+  value: number;
+  unit: string | null;
+  measuredAt: string;
+};

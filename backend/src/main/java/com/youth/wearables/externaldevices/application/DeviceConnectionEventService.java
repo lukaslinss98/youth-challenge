@@ -16,18 +16,35 @@ public class DeviceConnectionEventService {
 
   private final JunctionAccounts accounts;
   private final DeviceConnections deviceConnections;
+  private final VitalSyncService vitalSyncService;
 
-  DeviceConnectionEventService(JunctionAccounts accounts, DeviceConnections deviceConnections) {
+  DeviceConnectionEventService(
+      JunctionAccounts accounts,
+      DeviceConnections deviceConnections,
+      VitalSyncService vitalSyncService) {
     this.accounts = accounts;
     this.deviceConnections = deviceConnections;
+    this.vitalSyncService = vitalSyncService;
   }
 
-  @Transactional
   public void handleConnectionCreated(UUID junctionUserId, String providerSlug) {
     accounts
         .userIdByJunctionUserId(junctionUserId)
         .ifPresentOrElse(
-            userId -> deviceConnections.upsert(userId, providerSlug, ConnectionStatus.CONNECTED),
+            userId -> {
+              deviceConnections.upsert(userId, providerSlug, ConnectionStatus.CONNECTED);
+              vitalSyncService.syncUserAsync(userId, providerSlug);
+            },
             () -> log.warn("Ignoring connection event for unknown Junction user {}", junctionUserId));
+  }
+
+  @Transactional
+  public void handleConnectionDeleted(UUID junctionUserId, String providerSlug) {
+    accounts
+        .userIdByJunctionUserId(junctionUserId)
+        .ifPresentOrElse(
+            userId ->
+                deviceConnections.updateStatus(userId, providerSlug, ConnectionStatus.DISCONNECTED),
+            () -> log.warn("Ignoring disconnect event for unknown Junction user {}", junctionUserId));
   }
 }

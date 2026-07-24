@@ -2,25 +2,28 @@ import { useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Colors, Primitives, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/features/auth/store/session-store';
 import { DEVICES_QUERY_KEY } from '@/features/devices/api/use-devices';
 import { useLinkToken } from '@/features/devices/api/use-link-token';
-import { ConnectedDevices } from '@/features/devices/components/connected-devices';
+import { VITALS_QUERY_KEY } from '@/features/devices/api/use-vitals';
 import { BiomarkerPill } from '@/features/home/components/biomarker-pill';
 import { CarouselDots } from '@/features/home/components/carousel-dots';
 import { ConnectDeviceCard } from '@/features/home/components/connect-device-card';
-import { ConnectDeviceSheet } from '@/features/home/components/connect-device-sheet';
+import { ConnectDeviceSheet, DeviceOption } from '@/features/home/components/connect-device-sheet';
+import { DeviceActionsSheet } from '@/features/home/components/device-actions-sheet';
+import { DemoConnectSheet } from '@/features/home/components/demo-connect-sheet';
 import { HealthScoreGauge } from '@/features/home/components/health-score-gauge';
 import { HomeHeader } from '@/features/home/components/home-header';
 import { WhoopConnectPromptSheet } from '@/features/home/components/whoop-connect-prompt-sheet';
-import { WhoopConnectedSheet } from '@/features/home/components/whoop-connected-sheet';
 
 const c = Colors.light;
+
+const DEMO_CAPABLE_SLUGS = ['oura', 'apple_health_kit'];
 
 /** Warm aurora background, approximated with a vertical base gradient plus a
  * diagonal amber glow layered on top. */
@@ -32,16 +35,23 @@ export default function HomeScreen() {
   const user = useSessionStore((state) => state.user);
   const username = user?.username?.trim();
   const [deviceSheetOpen, setDeviceSheetOpen] = useState(false);
+  const [actionDevice, setActionDevice] = useState<{
+    option: DeviceOption;
+    provider: string;
+  } | null>(null);
   const [whoopPromptOpen, setWhoopPromptOpen] = useState(false);
-  const [whoopSheetOpen, setWhoopSheetOpen] = useState(false);
-  const showConnectedAfterDismiss = useRef(false);
+  const [demoDevice, setDemoDevice] = useState<DeviceOption | null>(null);
   const linkTokenMutation = useLinkToken();
   const queryClient = useQueryClient();
 
-  const handleSelectDevice = (device: string) => {
+  const handleSelectDevice = (device: DeviceOption, connectedProvider: string | null) => {
     setDeviceSheetOpen(false);
-    if (device === 'Whoop') {
+    if (connectedProvider) {
+      setActionDevice({ option: device, provider: connectedProvider });
+    } else if (device.name === 'Whoop') {
       setWhoopPromptOpen(true);
+    } else if (DEMO_CAPABLE_SLUGS.includes(device.slugs[0])) {
+      setDemoDevice(device);
     }
   };
 
@@ -66,13 +76,8 @@ export default function HomeScreen() {
           return;
         }
         queryClient.invalidateQueries({ queryKey: DEVICES_QUERY_KEY });
-        if (Platform.OS === 'ios') {
-          showConnectedAfterDismiss.current = true;
-          setWhoopPromptOpen(false);
-        } else {
-          setWhoopPromptOpen(false);
-          setWhoopSheetOpen(true);
-        }
+        queryClient.invalidateQueries({ queryKey: VITALS_QUERY_KEY });
+        setWhoopPromptOpen(false);
       },
     });
   };
@@ -116,7 +121,6 @@ export default function HomeScreen() {
 
       <View style={styles.sheet}>
         <Text style={styles.sheetTitle}>Health areas to improve</Text>
-        <ConnectedDevices />
       </View>
     </ScrollView>
 
@@ -126,22 +130,14 @@ export default function HomeScreen() {
       onSelect={handleSelectDevice}
     />
 
+    <DeviceActionsSheet device={actionDevice} onClose={() => setActionDevice(null)} />
+
+    <DemoConnectSheet device={demoDevice} onClose={() => setDemoDevice(null)} />
+
     <WhoopConnectPromptSheet
       visible={whoopPromptOpen}
       onCancel={() => setWhoopPromptOpen(false)}
       onContinue={handleConnectWhoop}
-      onDismiss={() => {
-        if (showConnectedAfterDismiss.current) {
-          showConnectedAfterDismiss.current = false;
-          setWhoopSheetOpen(true);
-        }
-      }}
-    />
-
-    <WhoopConnectedSheet
-      visible={whoopSheetOpen}
-      onClose={() => setWhoopSheetOpen(false)}
-      onNext={() => setWhoopSheetOpen(false)}
     />
     </>
   );

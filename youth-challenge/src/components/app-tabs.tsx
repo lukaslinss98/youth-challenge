@@ -18,20 +18,22 @@ export default function AppTabs() {
           <TabTrigger name="index" href="/" asChild>
             <NavItem label="Home" icon={HomeIcon} />
           </TabTrigger>
+          <TabTrigger name="data" href="/data" asChild>
+            <NavItem label="Data" icon={DataIcon} />
+          </TabTrigger>
         </BottomBar>
       </TabList>
     </Tabs>
   );
 }
 
-/** The white nav bar. Home (the real route) is passed in as children; the other
- * items are presentational placeholders until their routes exist. */
+/** The white nav bar. Home and Data (the real routes) are passed in as children;
+ * Plan and Chat are presentational placeholders until their routes exist. */
 function BottomBar({ children }: { children: React.ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
       {children}
-      <NavItem label="Data" icon={DataIcon} />
       <CenterFab />
       <NavItem label="Plan" icon={PlanIcon} />
       <NavItem label="Chat" icon={ChatIcon} />

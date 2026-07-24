@@ -13,6 +13,9 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,8 +32,11 @@ class JunctionWebhookController {
 
   private static final Logger log = LoggerFactory.getLogger(JunctionWebhookController.class);
   private static final String CONNECTION_CREATED = "provider.connection.created";
+  private static final String CONNECTION_DELETED = "provider.connection.deleted";
   private static final String HISTORICAL_PREFIX = "historical.data.";
   private static final String DAILY_PREFIX = "daily.data.";
+  private static final Set<String> HISTORICAL_VITAL_RESOURCES =
+      Set.of("heartrate", "hrv", "respiratory_rate", "blood_oxygen", "blood_pressure", "sleep");
 
   private final SvixWebhookVerifier verifier;
   private final SerDes serDes;
@@ -71,10 +77,14 @@ class JunctionWebhookController {
     log.info("Received Junction webhook event_type={}", eventType);
 
     if (CONNECTION_CREATED.equals(eventType)) {
-      handleConnectionCreated(payload);
+      handleConnectionEvent(payload, CONNECTION_CREATED, eventService::handleConnectionCreated);
+    } else if (CONNECTION_DELETED.equals(eventType)) {
+      handleConnectionEvent(payload, CONNECTION_DELETED, eventService::handleConnectionDeleted);
     } else if (eventType != null && eventType.startsWith(HISTORICAL_PREFIX)) {
-      resourceFrom(eventType, HISTORICAL_PREFIX)
-          .ifPresent(resource -> handleHistorical(eventType, resource, payload));
+      String slug = resourceSlug(eventType, HISTORICAL_PREFIX);
+      if (slug != null && HISTORICAL_VITAL_RESOURCES.contains(slug)) {
+        handleHistorical(eventType, payload);
+      }
     } else if (eventType != null && eventType.startsWith(DAILY_PREFIX)) {
       resourceFrom(eventType, DAILY_PREFIX)
           .ifPresent(resource -> handleDaily(eventType, resource, payload));
@@ -83,28 +93,29 @@ class JunctionWebhookController {
     return ResponseEntity.ok().build();
   }
 
-  private void handleConnectionCreated(byte[] payload) {
-    ConnectionCreatedEvent event;
+  private void handleConnectionEvent(
+      byte[] payload, String eventType, BiConsumer<UUID, String> handler) {
+    ConnectionEvent event;
     try {
-      event = serDes.deserialize(payload, ConnectionCreatedEvent.class);
+      event = serDes.deserialize(payload, ConnectionEvent.class);
     } catch (SerDesException e) {
-      log.warn("Could not map {} payload: {}", CONNECTION_CREATED, raw(payload), e);
+      log.warn("Could not map {} payload: {}", eventType, raw(payload), e);
       return;
     }
 
-    ConnectionCreatedEvent.Data data = event.data();
+    ConnectionEvent.Data data = event.data();
     if (data == null
         || data.userId() == null
         || data.provider() == null
         || data.provider().slug() == null) {
-      log.warn("Malformed {} event; raw payload: {}", CONNECTION_CREATED, raw(payload));
+      log.warn("Malformed {} event; raw payload: {}", eventType, raw(payload));
       return;
     }
 
-    eventService.handleConnectionCreated(data.userId(), data.provider().slug());
+    handler.accept(data.userId(), data.provider().slug());
   }
 
-  private void handleHistorical(String eventType, VitalResource resource, byte[] payload) {
+  private void handleHistorical(String eventType, byte[] payload) {
     HistoricalDataEvent event;
     try {
       event = serDes.deserialize(payload, HistoricalDataEvent.class);
@@ -123,7 +134,7 @@ class JunctionWebhookController {
         data.endDate() != null ? data.endDate().toLocalDate() : LocalDate.now(ZoneOffset.UTC);
     LocalDate start = data.startDate() != null ? data.startDate().toLocalDate() : end.minusDays(30);
 
-    vitalIngestionService.ingestHistorical(data.userId(), data.provider(), resource, start, end);
+    vitalIngestionService.ingestHistorical(data.userId(), data.provider(), start, end);
   }
 
   private void handleDaily(String eventType, VitalResource resource, byte[] payload) {
@@ -192,12 +203,14 @@ class JunctionWebhookController {
   }
 
   private static Optional<VitalResource> resourceFrom(String eventType, String prefix) {
+    String slug = resourceSlug(eventType, prefix);
+    return slug == null ? Optional.empty() : VitalResource.fromSlug(slug);
+  }
+
+  private static String resourceSlug(String eventType, String prefix) {
     String rest = eventType.substring(prefix.length());
     int lastDot = rest.lastIndexOf('.');
-    if (lastDot < 0) {
-      return Optional.empty();
-    }
-    return VitalResource.fromSlug(rest.substring(0, lastDot));
+    return lastDot < 0 ? null : rest.substring(0, lastDot);
   }
 
   private static String raw(byte[] payload) {

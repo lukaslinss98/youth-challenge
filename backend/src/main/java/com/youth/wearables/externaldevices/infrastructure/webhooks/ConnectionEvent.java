@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-record ConnectionCreatedEvent(Data data) {
+record ConnectionEvent(Data data) {
 
   @JsonIgnoreProperties(ignoreUnknown = true)
   record Data(@JsonProperty("user_id") UUID userId, Provider provider) {}
