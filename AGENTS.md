@@ -3,7 +3,7 @@
 
 ## Repo overview
 
-This is the YOU(th) wearables integration challenge (see `project.md` for the full brief). The goal is a system that ingests wearable data (WHOOP/Apple Watch/Oura/Garmin via Junction) at scale and exposes it to the YOU(th) app for display. The repo currently contains two independent projects that are not yet wired together:
+This is the YOU(th) wearables integration challenge. The goal is a system that ingests wearable data (WHOOP/Apple Watch/Oura/Garmin via Junction) at scale and exposes it to the YOU(th) app for display. The repo currently contains two independent projects that are not yet wired together:
 
 - `backend/` — Java/Spring Boot API (Gradle), backed by Postgres via Flyway migrations.
 - `youth-challenge/` — Expo/React Native app (file-based routing via `expo-router`), currently the stock Expo template with minimal customization.

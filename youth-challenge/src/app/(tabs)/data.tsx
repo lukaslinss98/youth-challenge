@@ -31,6 +31,7 @@ export default function DataScreen() {
             refreshing={syncVitals.isPending}
             onRefresh={() => syncVitals.mutate(undefined)}
             tintColor={Primitives.orange}
+            colors={[Primitives.orange]}
           />
         }>
         <Text style={styles.header}>DATA</Text>

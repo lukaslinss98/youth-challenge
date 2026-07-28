@@ -18,9 +18,10 @@ export function useSyncVitals() {
           : '/api/v1/vitals/sync',
         { method: 'POST' },
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: VITALS_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: DEVICES_QUERY_KEY });
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: VITALS_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: DEVICES_QUERY_KEY }),
+      ]),
   });
 }
